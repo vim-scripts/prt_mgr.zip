@@ -1,0 +1,14 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=181
+
+This plugin extends the flexibility of printing from VIM using PSUtils - http://www.tardis.ed.ac.uk/~ajcd/psutils/. The plugin supports:
+
+o N-up printing,
+o Manual duplex printing (feeding printed pages back into the printer to print the reverse sides)
+o Reverse page order printing.
+o Print to file.
+
+There are also VIM functions to allow the Print Manager to be called from other scripts, as well as being hooked to the :hardcopy command using the printexpr option.
+
+See included help file for details on setting up and using the Print Manager plugin.
+
+NOTE: This replaces the dup_prt.zip Duplex Printing plugin - if you had previously installed this plugin then please remove this from your runtime directories.

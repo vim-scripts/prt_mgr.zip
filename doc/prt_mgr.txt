@@ -1,0 +1,423 @@
+*prt_mgr.txt*	Print Manager Plugin, V2.2
+		For Vim version 6.0.
+
+							*prt_mgr-plugin*
+prt_mgr.vim is a plugin that provides additional printing control to VIM.
+This plugin provides the following printing functionality:
+
+	o n-up printing,
+	o duplex printing on simplex (one side only) printers, and
+	o reverse page order printing.
+
+This plugin also supports sending the output to file.
+
+This plugin requires VIM 6.0 or later compiled with |+postscript|, and that
+PSUtils is installed on your system.  The plugin will not load if either of
+these conditions is not met.  (Information on PSUtils can be found in the help
+for |printing|.)
+
+NOTE: In order to use the duplex printing feature of the Print Manager you
+      must have exclusive access to the print queue.  If you do not then you
+      cannot guarantee that the reverse sides will be printed correctly.
+
+==============================================================================
+CONTENTS						*prt_mgr-contents*
+
+|prt_mgr-installation|	Installing the plugin.
+|prt_mgr-setup|		Setting up the plugin for correct printing.
+|prt_mgr-usage|		Using the plugin in VIM.
+|prt_mgr-options|	Options controlling plugin behaviour.
+|prt_mgr-commands|	Printing commands.
+|prt_mgr-functions|	VIML printing functions.
+|prt_mgr-limitations|	Known plugin limitations.
+|prt_mgr-support|	Support for the plugin.
+
+==============================================================================
+INSTALLATION						*prt_mgr-installation*
+
+NOTE: If you have previously installed the Duplex Printing plugin then you
+      should first delete the files plugin/dup_prt.vim and doc/dup_prt.txt
+      before using this plugin.
+
+The plugin file (prt_mgr.vim) should be placed in a sub-directory called
+plugin that exists in a directory early in your 'runtimepath', for example
+~/.vim/plugin.
+
+This help file should be placed in a directory named doc that exists at the
+same level as your plugin directory, for example ~/.vim/doc.  After extracting
+this file run 'helptags' on this doc directory so that you can access it with
+the 'help' command.
+
+The simplest approach is to expand the ZIP file containing these two files
+into your runtimepath directory preserving the pathnames, and then run
+'helptags'.
+
+New menu entries are automatically added to the File menu for Duplex and 2-up
+printing.  This can be controlled by |pmgrNoMenu|.
+
+Once the plugin has been installed follow the instructions in |prt_mgr_setup|
+to ensure the plugin is setup correctly for your printer.
+
+==============================================================================
+SETUP							*prt_mgr-setup*
+
+This section describes some simple procedures to help you configure the Print
+Manager plugin to achieve the printing you want on your printer.
+
+Simplex Printing Page Order~
+Some printers stack the print output in reverse print order.  That is, while
+the pages are printed in ascending page number order (1, 2, 3, ...) the
+pages from the printer have the last printed page on the top and page 1 on
+the bottom.
+
+If you are not sure what your printer does, print a file with 2 or more pages
+and see whether the topmost page is numbered 1 or not.
+
+If your printer does stack the print output in reverse order then set
+|pmgrReversePages| to 1 (see |prt_mgr-options| below) so that simplex printing
+of files (i.e. not duplex) will result in the page 1 being on top.
+
+Manual Duplex Printing~
+In order to set up duplex printing correctly you need to know how to feed
+printed sheets back into the printer such that the printer will print on the
+reverse side.  The following process should help you find out how to feed the
+odd numbered pages back into the printer.
+
+PART A - Paper Feeding~
+These instructions will help you decide how to feed printed pages back into
+the printer so that the even numbered pages are printed on the reverse side
+with the correct orientation.
+
+Step 1. Draw an arrow on a sheet of printer paper in the direction you believe
+	is the top of the page after printing.  Place this page on top of all
+	the paper in the printer's paper feeder such that you can see the
+	arrow on top pointing in what you think is the paper feed direction.
+
+Step 2. Print a single page from VIM using |:hardcopy| with a default
+        'printexpr'.
+
+Step 3. See on which side your arrow is and the direction in which it is
+	pointing - this is used to decide how you should feed the printed odd
+	numbered pages back into the printer.
+
+	If the arrow is on the reverse side to that printed, then the printed
+	pages should to be placed back into the printer printed side up.  If
+	the arrow is on the printed side, then the printed pages should be
+	placed back into the printer blank side up.
+
+	If the arrow is pointing to the top of the printed page, then the
+	printed pages should be placed back into the printer with the top of
+	the page at the end of the paper feeder originally pointed to by the
+	arrow.  If the arrow is pointing to the bottom of the printed page,
+	then the printed pages should be placed back into the printer with the
+	bottom of the page at the end of the paper feeder originally pointed
+	to by the arrow.
+
+Note: As a check, draw an arrow on another sheet of paper, then turn and
+      rotate the sheet as required above, and place it back into the printer's
+      paper feeder.  Print a single page from VIM.  This time the arrow should
+      be on the printed side of the page and pointing towards the header.  If
+      it does not, go back to step 1.
+
+PART B - Reversing Odd Pages.~
+These instructions should help you decide if you need to print the odd
+numbered pages in reverse so that page 2 is printed on the reverse of page 1,
+and so on.
+
+Step 1. Print a 2 page file from VIM using |:hardcopy| using the default
+	'printheader' (this ensures that each page printed is numbered).
+
+Step 2. Check the number of the top page from the printer after printing.  If
+	this is not 1 then you will need to set |pmgrReverseOddPages| to 1 for
+	duplex printing to work correctly.
+
+	Note: You will need to quit VIM and restart for a new value of
+	      |pmgrReverseOddPages| to be picked up.  Please do this before
+              going on to the next stage of setting up the plugin.
+
+PART C - Check Duplex Printing.~
+These instructions should help you decide if you are feeding printed pages
+back into the printer the right way, and have setup the duplex printing plugin
+correctly.
+
+Step 1. Print a 3 or more page file from VIM using |:DuplexPrint|.  (This help
+	file should print on 6 sides with the default font and paper size.)
+
+Step 2. Confirm that page 2 is on the reverse of page 1 and has the same
+	orientation (the header of each page is at the same end of the paper).
+
+	If page 2 is printed on top of page 1 or if the headers are at
+	opposite ends of the paper then go back to PART A to find out how to
+	feed printed pages back into the printer.
+
+	If page 2 is not on the reverse side of page 1 then go back to PART B
+	to check how your printer stacks printed pages.
+
+	If page 2 is on the reverse side of page 1 and the headers are at the
+	same end of the page, then you have fed printed paper back into the
+	printer and setup the plugin correctly.  Happy duplex printing!
+
+==============================================================================
+USING THE PLUGIN					*prt_mgr-usage*
+
+There are 5 ways that the Print Manager plugin can be used for printing.  They
+are:
+
+1. From the GVIM file menu,
+2. From the command line,
+3. Using |:hardcopy| with 'printexpr', and
+4. From the VIM scripting language.
+5. Printing to a file.
+
+In all cases, printing from VIM is done with your 'printoptions' setting but
+the duplex setting will be ignored.  To do duplex printing you have to use the
+duplex printing in this plugin which requires you to have exclusive access to
+the print queue - if you do not you cannot do duplex printing reliably.
+
+1. Printing from the Menu~
+The plugin adds two menu entries to the File menu - Print Duplex and Print
+2-up.  Selecting either of these will cause the current buffer to be printed
+in duplex or 2-up respectively.
+
+You can easily add new menu entries for printing.  You first need to write a
+function that calls |DoPrint()| with the print settings you want, define a
+command to call your function, and finally add a new menu entry that calls
+your command.  The following example shows how to do 2-up duplex printing from
+the File menu: >
+
+    :function MyPrint()
+    :  let rc = DoPrint(2, 1)
+    :  return rc
+    :endfunc
+    :com -nargs=0 MyPrint :call MyPrint()
+    :amenu 10.540 &File.Print\ Sp&ecial :MyPrint<CR>
+    :tmenu &File.Print\ Sp&ecial Start 2-up duplex printing.
+
+2. Printing from the Command Line~
+Two command line commands are defined to provide duplex and 2-up printing -
+|:DuplexPrint| and |:NupPrint|.  Just enter these commands to start printing
+immediately.
+
+You can easily create new command line commands to print using your own
+settings from the command line.  See the example for adding a new menu entry
+for printing for an example of creating a new command.
+
+3. Using :hardcopy and printexpr~
+VIM can be configured to use the Print Manager plugin when printing with the
+|:hardcopy| command by using the 'printexpr' option with the |PrintManager()|
+function.  Adding the following line to your VIM startup file will do normal
+simplex printing: >
+
+	set printexpr=PrintManager(v:fname_in,0,0)
+~
+If you want to print 2-up duplex by when using :hardcopy then add: >
+
+	set printexpr=PrintManager(v:fname_in,2,1)
+~
+NOTE: When setting 'printexpr' there must be no spaces in the argument list
+      to PrintManager() or you will get a error during VIM startup.
+
+4. Printing from VIML~
+You can use the Print Manager plugin for printing from your own VIM scripts.
+The |DoPrint()| function allows to programmatically control n-up, duplex, and
+file printing.  See the example for adding a new menu entry for printing for
+an example of using DoPrint().
+
+5. Printing to a File~
+The Print Manager plugin supports printing to a file.  There are three ways to
+specify the name of a file to print to:
+
+1. Give an explcit filename to print to,
+2. let the plugin automatically generate a filename, or
+3. prompt the user to enter a filename.
+
+When the plugin automatically generates a filename it uses the buffer name
+replacing any extension with ".ps".  If the buffer name has no extension, or
+the extension is already ".ps", then ".ps" is just appended to the buffer
+name.  If the buffer has no name (such as when first created with |:new|) then
+a default buffer name of "no name" is used.
+
+If you print duplex to file then the plugin will create two files - one for
+the odd numbered pages, and one for the even numbered pages.  The file with
+the odd numbered pages is identified by adding ".o" before any extension, or
+at the end of the file if there is not one.  The file with the even numbered
+pages has ".e" added to it.  For example, duplex printing to "temp.ps" would
+produce the files "temp.o.ps" and "temp.e.ps".
+
+==============================================================================
+OPTIONS 						*prt_mgr-options*
+
+The Print Manager plugin can be configured by defining various variables and
+assigning values to them.  For example, to enable printing of pages in
+descending page number order you would add the following line to your startup
+file: >
+
+    let pmgrReversePages = 1
+
+To disable an option you need to ensure that the variable is not defined by
+using the |:unlet| command.  For example, to ensure printing of pages in
+ascending page number order, you could add the following line to your startup
+file: >
+
+    unlet pmgrReversePages
+
+By default none of the variables are defined, and printing follows the
+behaviour described as if the variable was defined with the default value
+documented.  For help on setting variables for printing with your printer see
+|prt_mgr-setup|.
+
+The following variables control printing with the Print Manager plugin:
+
+							*pmgrNoMenu*
+g:pmgrNoMenu~
+    Controls whether menu entries are added to the File menu for Duplex and
+    2-up printing.  If the value is 0 then the entries are added to the menu,
+    if it is non-zero then they are not.
+    Default: 0 (add menu entries.)
+
+							*pmgrReverseOddPages*
+g:pmgrReverseOddPages~
+    Controls whether the odd numbered pages in a duplex job are printed in
+    ascending or descending order (i.e. 1, 3, ... or ..., 3, 1).  If the value
+    is 0 then the pages are printed in ascending order, if it is non-zero then
+    in descending order.  See |prt_mgr-setup| for examples of its use.
+    Default: 0 (ascending order.)
+
+    NOTE: If you have previously installed the Duplex Printing plugin and set
+	  dprtReverseOddPages, it will be detected and used, but you will get
+	  a warning.
+
+							*pmgrReversePages*
+g:pmgrReversePages~
+    Controls whether the pages of a simplex job are printed in ascending or
+    descending order (i.e. 1, 2, 3, ... or ..., 3, 2, 1).  If the value is 0
+    then the pages are printed in ascending order, if it is non-zero then in
+    descending order.  See |prt_mgr-setup| for examples of its use.
+    Default: 0 (ascending order.)
+
+    NOTE: If you use |PrintManager()| in 'printexpr' with duplex enabled in
+	  'printoptions' and pmgrReversePages is non-zero, then the duplex
+          setting will be ignored.
+
+==============================================================================
+COMMANDS						*prt_mgr-commands*
+
+Two commands are provided to provide quick access to manual duplex and 2-up
+printing from the VIM command line.
+
+
+:DuplexPrint {fileoption}				*:DuplexPrint*
+    Does a one page per side manual duplex print.  {fileoption} is optional
+    number argument controlling printing to file as follows:
+	1 - prompt for a filename to print to, or
+	2 - use an automatically generated name to print to.
+    Any other number will cause an error message to be displayed.  See
+    |prt_mgr-usage| for details on printing to file.
+
+    VIM will pause waiting for you to confirm the printer is ready to print
+    the reverse sides.  Do not hit do anything else in VIM until the odd
+    numbered pages have been printed and you have fed them back into the
+    printer's paper feeder.
+
+
+:NupPrint [{fileoption}]				*:NupPrint*
+    Does a 2-up simplex print.  {fileoption} is optional number argument
+    controlling printing to file as follows:
+	1 - prompt for a filename to print to, or
+	2 - use an automatically generated name to print to.
+    Any other number will cause an error message to be displayed.  See
+    |prt_mgr-usage| for details on printing to file.
+
+==============================================================================
+FUNCTIONS						*prt_mgr-functions*
+
+Two functions are provided to allow you to include Print Manager functionality
+in your own scripts.
+
+							*DoPrint()*
+DoPrint(nup, duplex, [printfile[, filename]])~
+    This function will print the current file doing both n-up and duplex
+    printing.  This function does not use 'printexpr'.  The arguments are as
+    follows:
+
+    nup -	Number of pages to print on a sheet of paper.  Values less
+		than 2 turn off n-up printing.
+    duplex -	Do duplex printing.  A value of 0 means no duplex printing,
+		any other value enables duplex printing.
+    printfile - A number controlling printing to file as follows:
+                0 - use the filename given as the next argument,
+		1 - prompt for a filename,
+		2 - automatically generate a filename.
+    filename -  Filename to print to when printfile is 0.
+
+    The function returns 0 if printing completed successfully, else it returns
+    a non-zero value.
+    See |prt_mgr-usage| for details on printing to file.
+
+							*PrintManager()*
+PrintManager(tempfile, nup, duplex, [printfile[, filename]])~
+    This function allows you to hook the Print Manager plugin into VIM with
+    the 'printexpr' option.  The arguments are as follows:
+
+    tempfile - 	Name of file printed to by VIM.
+    nup -	Number of pages to print on a sheet of paper.  Values less
+		than 2 turn off n-up printing.
+    duplex -	Do duplex printing.  A value of 0 means no duplex printing,
+		any other value enables duplex printing.
+    printfile - A number controlling printing to file as follows:
+                0 - use the filename given as the next argument,
+		1 - prompt for a filename,
+		2 - automatically generate a filename.
+    filename -  Filename to print to when printfile is 0.
+
+    The function returns 0 if printing completed successfully, else it returns
+    a non-zero value.
+    See |prt_mgr-usage| for details on printing to file.
+
+==============================================================================
+LIMITATIONS						*prt_mgr-limitations*
+
+There are some limitations to printing from VIM with the Print Manager plugin.
+They are:
+
+1. When printing duplex, VIM is unusable until the even numbered pages have
+   been sent to the printer.  Otherwise the odd numbered pages will be sent to
+   the printer before you have a chance to put the paper back into the
+   printer.
+
+2. When printing duplex, if there are an odd number of pages, then the last
+   odd numbered page will not be fed through the printer and will stay in the
+   printer's paper feeder.  If you know there is an odd number of pages then
+   don't place the last printed odd numbered page back into the printer, or
+   remember to remove it from the feeder after printing the reverse sides.
+
+3. When printing duplex, if there is only 1 page you will still be asked for
+   confirmation to print the even numbered pages even though there aren't any.
+   If you know there is only 1 page then use |:hardcopy|, not |:DuplexPrint|.
+
+4. When printing n-up and using |PrintManager()| from 'printexpr' with duplex
+   enabled in 'printoptions' the duplex setting is ignored.  psnup always
+   removes the commands for duplex printing.
+
+5. When printing pages in reverse order and using |PrintManager()| from
+   'printexpr' with duplex enabled in 'printoptions' the duplex setting is
+   ignored.  psselect removes the commands for duplex printing.
+
+==============================================================================
+SUPPORT							*prt_mgr-support*
+
+You can find updates to the Print Manager Plugin at either VIMonline at: >
+    http://vim.sourceforge.net/ 
+
+or on my web site at: >
+    http://www.eandem.co.uk/mrw/vim/
+
+Please send any bug-reports or suggestions for improvement to >
+    mrw@eandem.co.uk
+
+I would be grateful if you could include details of your OS, printer, and
+'printoptions' and 'printexpr' settings in any reports.
+
+Happy printing!
+
+vim:tw=78:ts=8:ft=help
